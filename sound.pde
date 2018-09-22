@@ -1,5 +1,4 @@
 import processing.sound.*;
-Sound s;
 
 Env env;
 
@@ -12,19 +11,31 @@ float detune = 0;
 float startTime;
 float triggerTime;
 float triggerLenght;
+
 float count = 0;
 
 int index = 0;
+
 
 SinOsc[] sineWaves; // Array of sines
 float[] sineFreq; // Array of frequencies
 int numSines = 5; // Number of oscillators to use
 
-int[][] sineEnvs = { {0, 1, 1, 0, 0, 1, 1, 0},
-{1, 0, 1, 0, 1, 0, 1, 0},
-{0, 1, 0, 1, 0, 1, 0, 1},
-{0, 1, 1, 1, 0, 0, 0, 0},
-{1, 1, 1, 0, 0, 0, 0, 0}};
+
+//rythm
+int[][] sineEnvs = { {0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0},
+{1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0},
+{0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0},
+{1, 1, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 0, 0, 0, 0},
+{1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}};
+
+//melody
+int[][] sineNotes = { {60, 60, 60, 60, 60, 60, 60, 60},
+{63, 63, 63, 63, 63, 63, 63, 63},
+{67, 67, 67, 67, 67, 67, 67, 67},
+{70, 70, 70, 70, 70, 70, 70, 70},
+{84, 84, 84, 84, 84, 84, 84, 84}};
+
 
 
 void setup() {
@@ -42,6 +53,8 @@ void setup() {
     float sineVolume = (1.0 / numSines) / (i + 1);
     // Create the oscillators
     sineWaves[i] = new SinOsc(this);
+    // Set panning
+    sineWaves[i].pan(random(-1.0,1.0));
     // Start Oscillators
     sineWaves[i].play();
     // Set the amplitudes for all oscillators
@@ -58,10 +71,14 @@ void draw() {
 
 }
 
+float mtof(int midiPitch) {
+  return pow(2.0,(midiPitch-69.0)/12.0) * 440.0;
+}
+
 void sequence() {
 
     startTime = millis();
-    triggerLenght = 400;
+    triggerLenght = 200;
     count = 0;
 
     while (true) {
@@ -69,14 +86,14 @@ void sequence() {
 
         if(millis() > triggerTime){
           for (int i = 0; i < numSines; i++) {
-            sineFreq[i] = random(880) * (i + 1 * detune);
+            sineFreq[i] = mtof(sineNotes[i][index % 8]);
             // Set the frequencies for all oscillators
             sineWaves[i].freq(sineFreq[i]);
             // Apply envelope
             if(sineEnvs[i][index] == 1)
               env.play(sineWaves[i], attackTime, sustainTime, sustainLevel, releaseTime);
           }
-          index = (index + 1) % 4;
+          index = (index + 1) % 16;
           count = count + 1;
         }
     }
